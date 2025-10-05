@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from typing import Optional
 import oracledb
 
-from backend.models.tissue import TissueCreate, TissueResponse, TissueUpdate
-from backend.db_utils import get_tissue_by_id
+from app.models.tissue import TissueCreate, TissueResponse, TissueUpdate
+from app.db_utils import get_tissue_by_id, read_clob
 
 router = APIRouter(prefix="/api/tissues", tags=["tissues"])
 
@@ -105,7 +105,7 @@ async def get_tissues(
                 {
                     "tissue_id": row[0],
                     "tissue_name": row[1],
-                    "tissue_description": row[2],
+                    "tissue_description": read_clob(row[2]),
                     "tissue_density": row[3],
                     "tissue_is_vital": row[4],
                 }

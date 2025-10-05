@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from typing import Optional
 import oracledb
 
-from backend.models.drug import DrugCreate, DrugResponse, DrugUpdate
-from backend.db_utils import get_drug_by_id, create_varray, varray_to_list
+from app.models.drug import DrugCreate, DrugResponse, DrugUpdate
+from app.db_utils import get_drug_by_id, create_varray, varray_to_list, read_clob
 
 router = APIRouter(prefix="/api/drugs", tags=["drugs"])
 
@@ -19,19 +19,23 @@ async def create_drug(drug: DrugCreate, request: Request):
         cursor.execute("SELECT drug_seq.NEXTVAL FROM DUAL")
         drug_id = cursor.fetchone()[0]
 
-        # Create VARRAY for allergies
-        allergies_varray = None
+        # Build the AllergyListType constructor in SQL
         if drug.drug_allergies:
-            allergies_varray = create_varray(cursor, "AllergyListType", drug.drug_allergies)
+            # Escape single quotes in allergy strings and build SQL list
+            escaped_allergies = [a.replace("'", "''") for a in drug.drug_allergies]
+            allergy_list = ", ".join([f"'{a}'" for a in escaped_allergies])
+            allergies_sql = f"AllergyListType({allergy_list})"
+        else:
+            allergies_sql = "NULL"
 
-        # Insert using object type constructor
-        insert_query = """
+        # Insert using object type constructor with inline VARRAY construction
+        insert_query = f"""
             INSERT INTO Drugs VALUES (
                 DrugType(
                     :drug_id,
                     :drug_name,
                     :drug_description,
-                    :drug_allergies
+                    {allergies_sql}
                 )
             )
         """
@@ -41,7 +45,6 @@ async def create_drug(drug: DrugCreate, request: Request):
                 "drug_id": drug_id,
                 "drug_name": drug.drug_name,
                 "drug_description": drug.drug_description,
-                "drug_allergies": allergies_varray,
             },
         )
         request.app.state.connection.commit()
@@ -100,7 +103,7 @@ async def get_drugs(
                 {
                     "drug_id": row[0],
                     "drug_name": row[1],
-                    "drug_description": row[2],
+                    "drug_description": read_clob(row[2]),
                     "drug_allergies": varray_to_list(row[3]),
                 }
             )
@@ -156,9 +159,13 @@ async def update_drug(drug_id: int, drug: DrugUpdate, request: Request):
             params["drug_description"] = drug.drug_description
 
         if drug.drug_allergies is not None:
-            update_fields.append("d.drug_allergies = :drug_allergies")
-            allergies_varray = create_varray(cursor, "AllergyListType", drug.drug_allergies)
-            params["drug_allergies"] = allergies_varray
+            # Build the AllergyListType constructor in SQL
+            if drug.drug_allergies:
+                escaped_allergies = [a.replace("'", "''") for a in drug.drug_allergies]
+                allergy_list = ", ".join([f"'{a}'" for a in escaped_allergies])
+                update_fields.append(f"d.drug_allergies = AllergyListType({allergy_list})")
+            else:
+                update_fields.append("d.drug_allergies = NULL")
 
         if not update_fields:
             # No fields to update, return existing drug

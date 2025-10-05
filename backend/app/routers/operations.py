@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request, Query
 import oracledb
 
-from backend.db_utils import varray_to_list
+from app.db_utils import varray_to_list, read_clob
 
 router = APIRouter(prefix="/api/operations", tags=["operations"])
 
@@ -37,7 +37,7 @@ async def get_tissues_by_density(
                 {
                     "tissue_id": row[0],
                     "tissue_name": row[1],
-                    "tissue_description": row[2],
+                    "tissue_description": read_clob(row[2]),
                     "tissue_density": row[3],
                     "tissue_is_vital": row[4],
                 }
@@ -86,7 +86,7 @@ async def get_cure_details(cure_id: int, request: Request):
                 {
                     "drug_id": row[1],
                     "drug_name": row[2],
-                    "drug_description": row[3],
+                    "drug_description": read_clob(row[3]),
                     "drug_allergies": allergies,
                 }
             )
@@ -253,7 +253,7 @@ async def get_top_researchers_suggestions(
                 researchers_map[researcher_id]["suggested_future_works"].append(
                     {
                         "future_work_id": fw_id,
-                        "future_work_description": row[10],
+                        "future_work_description": read_clob(row[10]),
                     }
                 )
 

@@ -3,6 +3,23 @@ import oracledb
 from typing import Optional, List, Any, Dict
 
 
+def read_clob(clob: Any) -> Optional[str]:
+    """Read CLOB content and return as string
+
+    Args:
+        clob: Oracle CLOB object or string
+
+    Returns:
+        String content or None
+    """
+    if clob is None:
+        return None
+    if isinstance(clob, str):
+        return clob
+    # It's a LOB object, read it
+    return clob.read()
+
+
 def get_next_id(cursor: oracledb.Cursor, sequence_name: str) -> int:
     """Get next value from an Oracle sequence"""
     cursor.execute(f"SELECT {sequence_name}.NEXTVAL FROM DUAL")
@@ -24,7 +41,13 @@ def create_varray(cursor: oracledb.Cursor, type_name: str, values: List[str]) ->
     if not values:
         return None
 
-    obj_type = cursor.connection.gettype(type_name)
+    try:
+        obj_type = cursor.connection.gettype(type_name)
+    except Exception:
+        # Try with current schema prefix
+        current_user = cursor.connection.username.upper()
+        obj_type = cursor.connection.gettype(f"{current_user}.{type_name}")
+
     return obj_type.newobject(values)
 
 
@@ -88,7 +111,7 @@ def get_tissue_by_id(cursor: oracledb.Cursor, tissue_id: int) -> Optional[Dict]:
     return {
         "tissue_id": row[0],
         "tissue_name": row[1],
-        "tissue_description": row[2],
+        "tissue_description": read_clob(row[2]),
         "tissue_density": row[3],
         "tissue_is_vital": row[4]
     }
@@ -113,7 +136,7 @@ def get_drug_by_id(cursor: oracledb.Cursor, drug_id: int) -> Optional[Dict]:
     return {
         "drug_id": row[0],
         "drug_name": row[1],
-        "drug_description": row[2],
+        "drug_description": read_clob(row[2]),
         "drug_allergies": varray_to_list(row[3])
     }
 

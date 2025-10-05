@@ -2,9 +2,10 @@ import oracledb
 import os
 import dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from backend.routers import donor_router, tissue_router, drug_router, operations_router
+from app.routers import donor_router, tissue_router, drug_router, operations_router
 
 dotenv.load_dotenv()
 
@@ -22,6 +23,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="WHO Backend", version="1.0.0", lifespan=lifespan)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers
 app.include_router(donor_router)

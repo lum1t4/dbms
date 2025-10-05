@@ -4,7 +4,7 @@ services:
     container_name: oracle-xe
     platform: linux/amd64
     environment:
-      - ORACLE_PWD=MySecurePwd123
+      - ORACLE_PWD=${ORACLE_PWD}
     ports:
       - "1521:1521"
       - "5500:5500"

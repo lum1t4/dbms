@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Request, Query
 from typing import Optional
 import oracledb
 
-from backend.models.donor import DonorCreate, DonorResponse, DonorUpdate
-from backend.db_utils import get_donor_by_id
+from app.models.donor import DonorCreate, DonorResponse, DonorUpdate
+from app.db_utils import get_donor_by_id
 
 router = APIRouter(prefix="/api/donors", tags=["donors"])
 

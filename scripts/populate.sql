@@ -172,3 +172,28 @@ END;
 /
 
 COMMIT;
+
+-- ========================
+-- Reset Sequences to avoid conflicts with API inserts
+-- ========================
+DECLARE
+    v_max_id NUMBER;
+BEGIN
+    -- Reset donor_seq to start after existing data
+    SELECT NVL(MAX(donor_id), 0) INTO v_max_id FROM Donors;
+    EXECUTE IMMEDIATE 'DROP SEQUENCE donor_seq';
+    EXECUTE IMMEDIATE 'CREATE SEQUENCE donor_seq START WITH ' || (v_max_id + 1) || ' INCREMENT BY 1';
+
+    -- Reset tissue_seq to start after existing data
+    SELECT NVL(MAX(tissue_id), 0) INTO v_max_id FROM Tissues;
+    EXECUTE IMMEDIATE 'DROP SEQUENCE tissue_seq';
+    EXECUTE IMMEDIATE 'CREATE SEQUENCE tissue_seq START WITH ' || (v_max_id + 1) || ' INCREMENT BY 1';
+
+    -- Reset drug_seq to start after existing data
+    SELECT NVL(MAX(drug_id), 0) INTO v_max_id FROM Drugs;
+    EXECUTE IMMEDIATE 'DROP SEQUENCE drug_seq';
+    EXECUTE IMMEDIATE 'CREATE SEQUENCE drug_seq START WITH ' || (v_max_id + 1) || ' INCREMENT BY 1';
+
+    DBMS_OUTPUT.PUT_LINE('All sequences reset successfully');
+END;
+/

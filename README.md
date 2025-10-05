@@ -1,14 +1,30 @@
 
 
-# Setup database
+## Setup database
 
 ```bash
 docker compose up -d database
-docker exec -i oracle-xe sqlplus SYSTEM/MySecurePwd123@localhost:1521/XEPDB1 @/dev/stdin < scripts/setup.sql
-docker exec -i oracle-xe sqlplus who/who123@localhost:1521/XEPDB1 @/dev/stdin < scripts/schema.sql
-docker exec -i oracle-xe sqlplus who/who123@localhost:1521/XEPDB1 < scripts/populate.sql
+docker exec -i oracle-xe sqlplus -S sys/$ORACLE_PWD@//localhost:1521/XEPDB1 as sysdba  <<< 'CREATE USER '$DATABASE_USER' IDENTIFIED BY "'$DATABASE_PASSWORD'" DEFAULT TABLESPACE users TEMPORARY TABLESPACE temp QUOTA UNLIMITED ON users PROFILE DEFAULT ACCOUNT UNLOCK;'
+docker exec -i oracle-xe sqlplus SYSTEM/${ORACLE_PWD}@localhost:1521/XEPDB1 @/dev/stdin < scripts/setup.sql
+docker exec -i oracle-xe sqlplus ${DATABASE_USER}/${DATABASE_PASSWORD}@localhost:1521/XEPDB1 @/dev/stdin < scripts/schema.sql
+docker exec -i oracle-xe sqlplus ${DATABASE_USER}/${DATABASE_PASSWORD}@localhost:1521/XEPDB1 < scripts/populate.sql
 ```
 
+
+## Run backend
+```bash
+cd backend && uv run fastapi dev
+```
+
+## Healt check
+```bash
+curl -X 'GET' 'http://127.0.0.1:8000/' -H 'accept: application/json'
+```
+
+## Run frontend
+```bash
+cd frontend && bun dev
+```
 
 ## Operations
 
