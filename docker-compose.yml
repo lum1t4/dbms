@@ -10,9 +10,13 @@ services:
       - "5500:5500"
     restart: unless-stopped
     volumes:
-      - ./data:/opt/oracle/oradata
+      - oracle-data:/opt/oracle/oradata
+      - oracle-backup:/opt/oracle/backup
     healthcheck:
       test: ["CMD", "sqlplus", "-L", "sys/secret@//localhost:1521/XEPDB1", "as", "sysdba", "@/check_health.sql"]
       interval: 30s
       timeout: 10s
       retries: 5
+volumes:
+  oracle-data:
+  oracle-backup:

@@ -1,15 +1,13 @@
 
 
-# Run the database
+# Setup database
 
 ```bash
 docker compose up -d database
-CREATE USER who IDENTIFIED BY who123; GRANT CONNECT, RESOURCE TO who;
-docker exec -i oracle-xe sqlplus SYSTEM/MySecurePwd123@localhost:1521/XEPDB1 @/dev/stdin < schema.sql
-docker exec -i oracle-xe sqlplus SYSTEM/MySecurePwd123@localhost:1521/XEPDB1 @/dev/stdin < populate.sql
+docker exec -i oracle-xe sqlplus SYSTEM/MySecurePwd123@localhost:1521/XEPDB1 @/dev/stdin < scripts/setup.sql
+docker exec -i oracle-xe sqlplus who/who123@localhost:1521/XEPDB1 @/dev/stdin < scripts/schema.sql
+docker exec -i oracle-xe sqlplus who/who123@localhost:1521/XEPDB1 < scripts/populate.sql
 ```
-
-
 
 
 ## Operations

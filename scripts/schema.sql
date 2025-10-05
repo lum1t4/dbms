@@ -1,15 +1,16 @@
+SET DEFINE OFF;
 -- ========================
 -- Collection Types
 -- ========================
 
-CREATE TYPE AllergyListType AS VARRAY(50) OF VARCHAR2(200);
+CREATE OR REPLACE TYPE AllergyListType AS VARRAY(50) OF VARCHAR2(200);
 /
 
 -- ========================
 -- Base Object Types
 -- ========================
 
-CREATE TYPE DonorType AS OBJECT (
+CREATE OR REPLACE TYPE DonorType AS OBJECT (
   donor_id             NUMBER,
   donor_name           VARCHAR2(100),
   donor_surname        VARCHAR2(100),
@@ -18,7 +19,7 @@ CREATE TYPE DonorType AS OBJECT (
 );
 /
 
-CREATE TYPE TissueType AS OBJECT (
+CREATE OR REPLACE TYPE TissueType AS OBJECT (
   tissue_id           NUMBER,
   tissue_name         VARCHAR2(100),
   tissue_description  CLOB,
@@ -27,7 +28,7 @@ CREATE TYPE TissueType AS OBJECT (
 );
 /
 
-CREATE TYPE DrugType AS OBJECT (
+CREATE OR REPLACE TYPE DrugType AS OBJECT (
   drug_id             NUMBER,
   drug_name           VARCHAR2(200),
   drug_description    CLOB,
@@ -39,11 +40,11 @@ CREATE TYPE DrugType AS OBJECT (
 -- Collections of REFs (must follow base object definitions)
 -- ========================
 
-CREATE TYPE DrugListType AS TABLE OF REF DrugType;
+CREATE OR REPLACE TYPE DrugListType AS TABLE OF REF DrugType;
 /
 
 -- Cure depends on DrugListType
-CREATE TYPE CureType AS OBJECT (
+CREATE OR REPLACE TYPE CureType AS OBJECT (
   cure_id            NUMBER,
   cure_composition   DrugListType
 );
@@ -53,7 +54,7 @@ CREATE TYPE CureType AS OBJECT (
 -- Disease Type (depends on Cure)
 -- ========================
 
-CREATE TYPE DiseaseType AS OBJECT (
+CREATE OR REPLACE TYPE DiseaseType AS OBJECT (
   disease_id             NUMBER,
   disease_name           VARCHAR2(200),
   disease_discovery      DATE,   -- date & time
@@ -67,7 +68,7 @@ CREATE TYPE DiseaseType AS OBJECT (
 -- Condition Type (depends on Disease, Donor, Tissue, Cure)
 -- ========================
 
-CREATE TYPE ConditionType AS OBJECT (
+CREATE OR REPLACE TYPE ConditionType AS OBJECT (
   condition_id        NUMBER,
   condition_status    VARCHAR2(10),  -- 'control' or 'disease'
   condition_disease   REF DiseaseType,
@@ -79,14 +80,14 @@ CREATE TYPE ConditionType AS OBJECT (
 /
 
 -- Collection of REF Conditions
-CREATE TYPE ConditionListType AS TABLE OF REF ConditionType;
+CREATE OR REPLACE TYPE ConditionListType AS TABLE OF REF ConditionType;
 /
 
 -- ========================
 -- Future Work
 -- ========================
 
-CREATE TYPE FutureWorkType AS OBJECT (
+CREATE OR REPLACE TYPE FutureWorkType AS OBJECT (
   future_work_id            NUMBER,
   future_work_description   CLOB,
   future_work_suggested_by  ConditionListType
@@ -94,14 +95,14 @@ CREATE TYPE FutureWorkType AS OBJECT (
 /
 
 -- Collection of REF FutureWorks
-CREATE TYPE FutureWorkListType AS TABLE OF REF FutureWorkType;
+CREATE OR REPLACE TYPE FutureWorkListType AS TABLE OF REF FutureWorkType;
 /
 
 -- ========================
 -- Researcher
 -- ========================
 
-CREATE TYPE ResearcherType AS OBJECT (
+CREATE OR REPLACE TYPE ResearcherType AS OBJECT (
   researcher_id               NUMBER,
   researcher_name             VARCHAR2(100),
   researcher_surname          VARCHAR2(100),
@@ -112,14 +113,14 @@ CREATE TYPE ResearcherType AS OBJECT (
 /
 
 -- Collection of REF Researchers
-CREATE TYPE ResearcherListType AS TABLE OF REF ResearcherType;
+CREATE OR REPLACE TYPE ResearcherListType AS TABLE OF REF ResearcherType;
 /
 
 -- ========================
 -- Publication
 -- ========================
 
-CREATE TYPE PublicationType AS OBJECT (
+CREATE OR REPLACE TYPE PublicationType AS OBJECT (
   publication_doi             VARCHAR2(100),
   publication_title           VARCHAR2(400),
   publication_journal         VARCHAR2(200),
@@ -183,3 +184,9 @@ NESTED TABLE publication_proposed_works STORE AS publication_proposed_works_nt;
 
 ALTER TABLE publication_authors_nt ADD (SCOPE FOR (COLUMN_VALUE) IS Researchers);
 ALTER TABLE publication_proposed_works_nt ADD (SCOPE FOR (COLUMN_VALUE) IS FutureWorks);
+
+
+
+CREATE SEQUENCE donor_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE tissue_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE drug_seq START WITH 1 INCREMENT BY 1;
