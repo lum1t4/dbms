@@ -54,8 +54,7 @@ SELECT cu.cure_id,
        DEREF(VALUE(d)).drug_name       AS drug_name,
        DEREF(VALUE(d)).drug_description AS drug_description,
        DEREF(VALUE(d)).drug_allergies  AS drug_allergies
-FROM   Cures cu,
-       TABLE(cu.cure_composition) d
+FROM   Cures cu, TABLE(cu.cure_composition) d
 WHERE  cu.cure_id = 1;
 ```
 

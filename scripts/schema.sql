@@ -46,10 +46,9 @@ CREATE OR REPLACE TYPE DrugListType AS TABLE OF REF DrugType;
 -- Cure depends on DrugListType
 CREATE OR REPLACE TYPE CureType AS OBJECT (
   cure_id            NUMBER,
+  cure_description   CLOB,
   cure_composition   DrugListType
 );
-/
-
 -- ========================
 -- Disease Type (depends on Cure)
 -- ========================
@@ -150,16 +149,21 @@ CREATE TABLE Drugs OF DrugType (
 CREATE TABLE Cures OF CureType (
   CONSTRAINT pk_cures PRIMARY KEY (cure_id)
 )
+PARTITION BY HASH (cure_id) PARTITIONS 64
 NESTED TABLE cure_composition STORE AS cure_composition_nt;
+
 ALTER TABLE cure_composition_nt ADD (SCOPE FOR (COLUMN_VALUE) IS Drugs);
 
 CREATE TABLE Diseases OF DiseaseType (
   CONSTRAINT pk_diseases PRIMARY KEY (disease_id),
+  CONSTRAINT unique_disease_name UNIQUE (disease_name),
   SCOPE FOR (disease_cure_ref) IS Cures
 );
 
+
 CREATE TABLE Conditions OF ConditionType (
   CONSTRAINT pk_conditions PRIMARY KEY (condition_id),
+  CONSTRAINT check_status_disease CHECK ( (condition_status='control' AND condition_disease IS NULL) OR (condition_status='disease' AND condition_disease IS NOT NULL) ),
   SCOPE FOR (condition_disease) IS Diseases,
   SCOPE FOR (donor_ref) IS Donors,
   SCOPE FOR (tissue_ref) IS Tissues,
